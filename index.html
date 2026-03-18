@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Dashboard - VisiCheck</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+
+<body>
+  <div class="app-layout mood-glow" id="mainLayout">
+    <aside id="sidebar" class="sidebar"></aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <div style="display: flex; align-items: center; gap: 1rem;">
+          <button class="menu-toggle" onclick="app.toggleSidebar()">
+            <i data-lucide="menu"></i>
+          </button>
+          <div>
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <h2 id="pageTitle">Security Console</h2>
+                <span class="branch-pill">GALAXY APARTMENTS</span>
+            </div>
+            <select onchange="dashboard.switchGate(this.value)" style="background: none; border: none; color: var(--text-muted); font-size: 0.75rem; cursor: pointer; font-weight: 600;">
+              <option value="main">Gate A - Main Entrance</option>
+              <option value="north">Gate B - North Wing</option>
+            </select>
+          </div>
+        </div>
+          <div class="user-profile mobile-hidden">
+            <button onclick="app.toggleA11y()" class="primary-btn" title="Accessibility Mode" style="padding: 0.5rem; background: var(--surface); border-color: var(--border);">
+              <i data-lucide="accessibility"></i>
+            </button>
+            <button onclick="dashboard.toggleNightOps()" class="primary-btn" style="padding: 0.5rem; background: var(--surface); border-color: var(--border);">
+              <i data-lucide="moon"></i>
+            </button>
+            <div class="user-avatar" id="avatarInitials">AD</div>
+            <span id="userName">Admin</span>
+          </div>
+          <button id="logoutBtn"
+            style="background: none; border: none; cursor: pointer; color: var(--danger); margin-left: 0.5rem;">
+            <i data-lucide="log-out" style="width: 18px;"></i>
+          </button>
+        </div>
+      </header>
+
+      <div class="page-content animate-fade">
+        <!-- Dashboard Quick Actions (Mobile Only) -->
+        <div class="mobile-only" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2rem; width: 100%;">
+            <a href="visitors.html" class="card" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1.5rem; text-decoration: none; border: 1px solid var(--primary); background: rgba(99,102,241,0.05);">
+                <i data-lucide="plus-circle" style="width: 32px; height: 32px; color: var(--primary); margin-bottom: 0.5rem;"></i>
+                <span style="font-size: 0.8rem; font-weight: 700; color: white;">New Check-In</span>
+            </a>
+            <button onclick="app.triggerSOS()" class="card" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1.5rem; border: 1px solid var(--danger); background: rgba(239,68,68,0.05); cursor: pointer;">
+                <i data-lucide="bell-ring" style="width: 32px; height: 32px; color: var(--danger); margin-bottom: 0.5rem;"></i>
+                <span style="font-size: 0.8rem; font-weight: 700; color: white;">Trigger SOS</span>
+            </button>
+        </div>
+
+        <div class="stats-grid">
+          <div class="card">
+            <div class="stat-icon" style="background: var(--primary-light); color: var(--primary);">
+              <i data-lucide="user-plus"></i>
+            </div>
+            <div class="stat-value" id="todayVisitors">0</div>
+            <div class="stat-label">Today's Visitors</div>
+          </div>
+          <div class="card">
+            <div class="stat-icon" style="background: #dcfce7; color: #15803d;">
+              <i data-lucide="users"></i>
+            </div>
+            <div class="stat-value" id="activeVisitors">0</div>
+            <div class="stat-label">Currently On-Site</div>
+          </div>
+          <div class="card">
+            <div class="stat-icon" style="background: #fee2e2; color: #991b1b;">
+              <i data-lucide="shield-alert"></i>
+            </div>
+            <div class="stat-value" id="blacklistCount">0</div>
+            <div class="stat-label">Blacklisted</div>
+          </div>
+          <div class="card insight-card">
+            <div style="display: flex; align-items: center; margin-bottom: 1rem;">
+              <i data-lucide="brain-circuit" class="insight-icon"></i>
+              <h4 style="font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em;">AI Traffic Insight</h4>
+            </div>
+            <div style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem;" id="aiPrediction">Evening Rush Expected</div>
+            <p style="font-size: 0.75rem; color: var(--text-muted);" id="aiRecommendation">Zomato/Swiggy traffic peaks from 7PM-9PM. Keep Service Gate open.</p>
+          </div>
+        </div>
+
+
+        <div class="grid-2-col" style="margin-top: 2rem;">
+          <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+              <h3>Hospitality Insights</h3>
+              <i data-lucide="smile" style="color: var(--success);"></i>
+            </div>
+            <div id="sentimentGraph">
+              <div style="font-size: 0.8rem; display: flex; justify-content: space-between;">
+                <span>Visitor Satisfaction</span>
+                <span id="sentimentValue">88%</span>
+              </div>
+              <div class="happiness-bar">
+                <div id="sentimentFill" class="happiness-fill" style="width: 88%;"></div>
+              </div>
+              <p style="font-size: 0.7rem; color: var(--text-muted); margin-top: 0.5rem;">Trending +5% since last week</p>
+            </div>
+          </div>
+
+          <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+              <h3>Live Security Wall</h3>
+              <span class="badge badge-success">Live Hub</span>
+            </div>
+            <div class="hologram-grid" id="holoWall">
+              <!-- Holo cards injected here -->
+            </div>
+          </div>
+          <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+              <h3>Digital Twin Schematic</h3>
+              <i data-lucide="layers" style="color: var(--primary);"></i>
+            </div>
+            <div class="schematic-container" style="perspective: 600px; transform-style: preserve-3d; background: transparent; border: none;">
+              <div style="width: 100%; height: 100%; background: repeating-linear-gradient(var(--border) 0 1px, transparent 1px 20px), repeating-linear-gradient(90deg, var(--border) 0 1px, transparent 1px 20px); transform: rotateX(60deg); position: relative; border: 1px solid var(--primary); opacity: 0.3;">
+                <!-- Animated Density Cells -->
+                <div class="heatmap-dot" style="left: 20%; top: 30%; width: 40px; height: 40px;"></div>
+                <div class="heatmap-dot" style="left: 60%; top: 50%; width: 60px; height: 60px;"></div>
+              </div>
+              <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; pointer-events: none;">
+                  <span style="font-size: 0.6rem; letter-spacing: 2px; color: var(--primary); font-weight: 800;">DIAMOND_SCAN_ACTIVE</span>
+              </div>
+            </div>
+            <p style="font-size: 0.7rem; color: var(--text-muted); margin-top: 1rem;">Real-time building density: <span id="densityVal" style="color: var(--primary); font-weight: 800;">Low</span></p>
+          </div>
+        </div>
+
+        <div class="grid-3-col" style="margin-top: 2rem;">
+          <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+              <h3>Regional Heat-Map</h3>
+              <i data-lucide="map-pin" style="color: var(--danger);"></i>
+            </div>
+            <div class="schematic-container" style="background: url('https://images.unsplash.com/photo-1524758631624-e2822e304c36?auto=format&fit=crop&q=80&w=400') center/cover;">
+                <div class="heatmap-dot" style="left: 30%; top: 40%;"></div>
+                <div class="heatmap-dot" style="left: 60%; top: 20%;"></div>
+                <div class="heatmap-dot" style="left: 50%; top: 70%;"></div>
+            </div>
+            <div style="margin-top: 1rem; font-size: 0.65rem; color: var(--text-muted); display: flex; justify-content: space-between;">
+                <span>Block-A: <b style="color: var(--success);">NORMAL</b></span>
+                <span>Parking-1: <b style="color: var(--warning);">FULL</b></span>
+                <span>Garden: <b style="color: var(--primary);">ACTIVE</b></span>
+            </div>
+          </div>
+          <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+              <h3>Energy Management</h3>
+              <i data-lucide="zap" style="color: #60a5fa;"></i>
+            </div>
+            <div style="text-align: center;">
+                <div class="stat-value" style="font-size: 2rem;">24 <span style="font-size: 0.8rem;">kW</span></div>
+                <p style="font-size: 0.7rem; color: var(--text-muted);">Current Common Area Load</p>
+                <div class="summary-bar" style="margin-top: 1rem;"><div class="summary-fill" style="width: 65%; background: var(--primary);"></div></div>
+            </div>
+          </div>
+          <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+              <h3>Building Health</h3>
+              <i data-lucide="activity" style="color: var(--primary);"></i>
+            </div>
+            <div style="text-align: center;">
+                <div id="healthScore" class="stat-value" style="font-size: 2rem; color: var(--success);">94%</div>
+                <p style="font-size: 0.7rem; color: var(--text-muted);">Safety, Satisfaction & Density Score</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top: 2rem; background: linear-gradient(135deg, var(--surface), rgba(99,102,241,0.05)); border: 1px solid var(--primary);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <i data-lucide="zap" class="proximity-vibe" style="color: var(--primary);"></i>
+                    <h3>Diamond Meta-Layer Pulse</h3>
+                </div>
+                <span class="badge badge-success" style="font-family: monospace;">LATENCY: 12MS</span>
+            </div>
+            <div class="grid-4-col">
+                <div style="text-align: center;">
+                    <p style="font-size: 0.6rem; color: var(--text-muted); text-transform: uppercase;">AI Uptime</p>
+                    <p style="font-size: 1.25rem; font-weight: 900; color: var(--success);">99.98%</p>
+                </div>
+                <div style="text-align: center;">
+                    <p style="font-size: 0.6rem; color: var(--text-muted); text-transform: uppercase;">Protocol Level</p>
+                    <p style="font-size: 1.25rem; font-weight: 900; color: var(--primary);">DIAMOND</p>
+                </div>
+                <div style="text-align: center;">
+                    <p style="font-size: 0.6rem; color: var(--text-muted); text-transform: uppercase;">Sync Status</p>
+                    <p style="font-size: 1.25rem; font-weight: 900; color: var(--success);">STABLE</p>
+                </div>
+                <div style="text-align: center;">
+                    <p style="font-size: 0.6rem; color: var(--text-muted); text-transform: uppercase;">Security Tier</p>
+                    <p style="font-size: 1.25rem; font-weight: 900; color: var(--warning);">ELITE</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card" style="margin-top: 2rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;">
+            <h3>Recent Activity</h3>
+            <a href="history.html" style="color: var(--primary); font-size: 0.875rem; font-weight: 600;">View All</a>
+          </div>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Visitor</th>
+                  <th>Purpose</th>
+                  <th>Time</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="recentTable">
+                <!-- Dynamic Load -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div id="globalSOS" class="sos-alert">
+    <i data-lucide="shield-alert" style="width: 32px; height: 32px;"></i>
+    <span>EMERGENCY ALERT: EVACUATE IMMEDIATELY</span>
+    <button onclick="app.stopSOS()"
+      style="background: white; color: #7f1d1d; border: none; padding: 0.4rem 1rem; border-radius: 8px; font-weight: 800; cursor: pointer;">SILENCE</button>
+  </div>
+
+  <div class="live-ticker">
+    <div class="ticker-content" id="liveTicker">
+        SOCIETY ALERT: Monthly general body meeting this Sunday at 10 AM | Water Tank Cleaning scheduled for Block B tomorrow | 🛡️ SECURITY STATUS: OPTIMAL
+    </div>
+  </div>
+
+  <div id="searchHUD" class="search-hud">
+    <div class="search-box-container animate-fade-in">
+        <div style="padding: 1.5rem; background: var(--surface); border-bottom: 1px solid var(--border);">
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <i data-lucide="search" style="color: var(--primary);"></i>
+                <input type="text" id="globalSearchInput" oninput="app.performSearch(this.value)" style="flex: 1; background: transparent; border: none; color: white; font-size: 1.25rem; outline: none;" placeholder="Search names, IDs, or purposes...">
+                <kbd style="background: var(--surface-light); padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; color: var(--text-muted);">ESC</kbd>
+            </div>
+        </div>
+        <div id="searchHits" style="max-height: 400px; overflow-y: auto; background: rgba(0,0,0,0.2);">
+            <p style="padding: 2rem; text-align: center; color: var(--text-muted);">Start typing to find visitors or personnel...</p>
+        </div>
+    </div>
+  </div>
+
+  <script src="js/db.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/dashboard.js"></script>
+</body>
+
+</html>

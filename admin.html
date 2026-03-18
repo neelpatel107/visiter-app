@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Admin - VisiCheck</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+
+<body>
+    <div class="app-layout">
+        <aside id="sidebar" class="sidebar"></aside>
+
+        <main class="main-content">
+            <header class="topbar">
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <button class="menu-toggle" onclick="app.toggleSidebar()">
+                        <i data-lucide="menu"></i>
+                    </button>
+                    <h2 id="pageTitle">System Protocol Admin</h2>
+                </div>
+                <div class="user-profile">
+                    <span id="userName">Super Admin</span>
+                    <button id="logoutBtn" class="primary-btn" style="padding: 0.5rem 1rem;">Logout</button>
+                </div>
+            </header>
+
+            <div class="page-content animate-fade">
+                <div class="stats-grid">
+                    <div class="card mood-glow">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <p style="color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase;">System Protocol</p>
+                                <h3 style="margin-top: 0.5rem;">Secure Shield</h3>
+                            </div>
+                            <i id="protocolIcon" data-lucide="shield" style="width: 32px; height: 32px; color: var(--primary);"></i>
+                        </div>
+                        <div style="margin-top: 1.5rem; display: flex; gap: 0.5rem;">
+                            <button onclick="admin.setProtocol(1)" class="primary-btn" style="flex: 1; padding: 0.5rem; font-size: 0.7rem;">Normal</button>
+                            <button onclick="admin.setProtocol(2)" class="primary-btn" style="flex: 1; padding: 0.5rem; font-size: 0.7rem; background: var(--warning);">Guarded</button>
+                            <button onclick="admin.setProtocol(3)" class="primary-btn" style="flex: 1; padding: 0.5rem; font-size: 0.7rem; background: var(--danger);">Lockdown</button>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3>Diamond Branding</h3>
+                        <p style="color: var(--text-muted); font-size: 0.75rem; margin-bottom: 1.5rem;">Apply global company identity.</p>
+                        <div class="grid-2-col">
+                            <div class="input-group">
+                                <label style="font-size: 0.65rem; color: var(--text-muted);">SOCIETY NAME</label>
+                                <input type="text" id="brandName" class="input-field" placeholder="Galaxy Apartments">
+                            </div>
+                            <div class="input-group">
+                                <label style="font-size: 0.65rem; color: var(--text-muted);">LOGO URL</label>
+                                <input type="text" id="brandLogo" class="input-field" placeholder="https://logo.url">
+                            </div>
+                        </div>
+                        <button onclick="admin.updateBranding()" class="primary-btn" style="width: 100%; margin-top: 1rem; background: linear-gradient(90deg, #b91c1c, #991b1b);">
+                            Apply Identity
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid-2-col" style="margin-top: 2rem;">
+                    <div class="card" style="background: linear-gradient(135deg, rgba(30,41,59,0.9), rgba(15,23,42,0.9));">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                            <h3>Visual Engine</h3>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <div style="width: 12px; height: 12px; border-radius: 50%; background: #6366f1; cursor: pointer;" onclick="admin.setPreset('default')"></div>
+                                <div style="width: 12px; height: 12px; border-radius: 50%; background: #00f2ff; cursor: pointer;" onclick="admin.setPreset('cyber')"></div>
+                                <div style="width: 12px; height: 12px; border-radius: 50%; background: #10b981; cursor: pointer;" onclick="admin.setPreset('nature')"></div>
+                                <div style="width: 12px; height: 12px; border-radius: 50%; background: #f43f5e; cursor: pointer;" onclick="admin.setPreset('sunset')"></div>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label style="font-size: 0.65rem; color: var(--text-muted);">PRIMARY GLOW COLOR</label>
+                            <input type="color" id="themeColor" value="#6366f1" style="width: 100%; height: 40px; background: none; border: 1px solid var(--border); border-radius: 8px; cursor: pointer;" onchange="admin.updateTheme()">
+                        </div>
+                        <div class="input-group">
+                            <label style="font-size: 0.65rem; color: var(--text-muted);">GLASSMORPHISM BLUR (px)</label>
+                            <input type="range" id="glassBlur" min="0" max="40" value="12" style="width: 100%;" oninput="admin.updateTheme()">
+                        </div>
+                        <button onclick="admin.toggleKiosk()" id="kioskBtn" class="primary-btn" style="width: 100%; margin-top: 1rem; background: var(--text); color: var(--background);">
+                            Enable Kiosk Mode
+                        </button>
+                    </div>
+
+                    <div class="card" id="privacyVault">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                            <h3>Privacy Shield</h3>
+                            <button onclick="admin.secureShred()" class="primary-btn btn-danger" style="padding: 0.4rem 0.8rem; font-size: 0.65rem;">SECURE SHRED</button>
+                        </div>
+                        <p style="color: var(--text-muted); font-size: 0.75rem; margin-bottom: 1.5rem;">GDPR Compliance: 24h Data Retention Sweep.</p>
+                        <div id="faceWall" style="display: flex; flex-wrap: wrap; gap: 0.5rem; filter: grayscale(1) contrast(1.2);">
+                            <!-- Active Faces will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid-2-col" style="margin-top: 2rem;">
+                  <div class="card">
+                    <h3>Executive Analytics</h3>
+                    <div style="margin-top: 1.5rem;">
+                      <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 0.5rem;">
+                        <span>Site Capacity</span>
+                        <span id="globalActiveVal">0 / 250</span>
+                      </div>
+                      <div class="summary-bar" style="height: 8px;"><div id="globalCapFill" class="summary-fill" style="width: 0%;"></div></div>
+                    </div>
+                    <div id="execSummary" style="margin-top: 1.5rem;"></div>
+                  </div>
+
+                  <div class="card">
+                    <h3>Smart Site Discovery</h3>
+                    <div id="assetSummary" style="margin-top: 1rem; font-size: 0.85rem; color: var(--text-muted);"></div>
+                    <div style="margin-top: 1.5rem; display: flex; gap: 0.5rem;">
+                      <button onclick="admin.purge()" class="primary-btn" style="flex: 1; font-size: 0.7rem; background: rgba(255,255,255,0.05);">Cleanup Logs</button>
+                      <button onclick="app.exportToCSV()" class="primary-btn" style="flex: 1; font-size: 0.7rem; background: rgba(255,255,255,0.05);">Export Audit</button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="card" style="margin-top: 2rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                        <h3>Forensic Audit Log</h3>
+                        <span style="font-size: 0.7rem; color: var(--text-muted);">LIVE TRACKING ENABLED</span>
+                    </div>
+                    <div class="table-container" style="max-height: 300px; overflow-y: auto; font-family: monospace; font-size: 0.75rem; background: rgba(0,0,0,0.2); border-radius: 8px; padding: 1rem;">
+                        <div id="auditLog">
+                            <div style="color: var(--text-muted);">[SYSTEM] Audit tracking initialized...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card" style="border-color: var(--danger); margin-top: 2rem;">
+                    <i data-lucide="refresh-cw"
+                        style="width: 48px; height: 48px; color: var(--danger); margin-bottom: 1rem;"></i>
+                    <h4 style="color: var(--danger);">Factory Reset</h4>
+                    <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">Wipe all data and
+                        restore 50 perfection dummy records.</p>
+                    <button onclick="admin.reset()" class="primary-btn btn-danger" style="width: 100%;">
+                        Perform Factory Reset
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/db.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/admin.js"></script>
+</body>
+
+</html>

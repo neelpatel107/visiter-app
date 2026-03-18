@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Login - VisiCheck</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+
+<body class="login-page">
+    <div class="login-card animate-fade">
+        <div style="text-align: center; margin-bottom: 2rem;">
+            <div
+                style="display: inline-flex; align-items: center; gap: 0.5rem; font-size: 2rem; font-weight: 800; color: var(--primary);">
+                <i data-lucide="shield-check" style="width: 40px; height: 40px;"></i>
+                VisiCheck
+            </div>
+            <p style="color: var(--text-muted); margin-top: 0.5rem;">Secure Visitor Administration</p>
+        </div>
+
+        <div id="passwordMethod">
+            <form id="loginForm">
+                <div class="input-group">
+                    <label class="input-label">Username</label>
+                    <input type="text" id="username" class="input-field" placeholder="Enter admin" required>
+                </div>
+                <div class="input-group">
+                    <label class="input-label">Password</label>
+                    <input type="password" id="password" class="input-field" placeholder="Enter password123" required>
+                </div>
+                <button type="submit" class="primary-btn" style="width: 100%; justify-content: center; margin-top: 1rem;">
+                    Sign In
+                </button>
+            </form>
+            <p onclick="document.getElementById('passwordMethod').classList.add('hidden'); document.getElementById('patternMethod').classList.remove('hidden');" 
+               style="text-align: center; margin-top: 1.5rem; color: var(--primary); cursor: pointer; font-size: 0.85rem; font-weight: 600;">
+               Use Biometric Pattern
+            </p>
+        </div>
+
+        <div id="patternMethod" class="hidden">
+            <p style="text-align: center; color: var(--text-muted); font-size: 0.9rem;">Draw your security pattern</p>
+            <div class="pattern-lock-container" id="patternCanvas">
+                <div class="pattern-dot" data-index="0"></div>
+                <div class="pattern-dot" data-index="1"></div>
+                <div class="pattern-dot" data-index="2"></div>
+                <div class="pattern-dot" data-index="3"></div>
+                <div class="pattern-dot" data-index="4"></div>
+                <div class="pattern-dot" data-index="5"></div>
+                <div class="pattern-dot" data-index="6"></div>
+                <div class="pattern-dot" data-index="7"></div>
+                <div class="pattern-dot" data-index="8"></div>
+            </div>
+            <p onclick="document.getElementById('passwordMethod').classList.remove('hidden'); document.getElementById('patternMethod').classList.add('hidden');" 
+               style="text-align: center; color: var(--text-muted); cursor: pointer; font-size: 0.85rem;">
+               Back to Password
+            </p>
+        </div>
+    </div>
+
+    <script src="js/db.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+        document.getElementById('loginForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const success = await window.auth.login(
+                document.getElementById('username').value,
+                document.getElementById('password').value
+            );
+            if (success) {
+                window.location.href = 'index.html';
+            } else {
+                const card = document.querySelector('.login-card');
+                card.classList.remove('animate-shake');
+                void card.offsetWidth; // trigger reflow
+                card.classList.add('animate-shake');
+                alert('Invalid credentials. Hint: admin / password123');
+            }
+        };
+
+        // Pattern Lock Logic
+        let pattern = [];
+        let isDrawing = false;
+        const dots = document.querySelectorAll('.pattern-dot');
+
+        dots.forEach(dot => {
+            dot.addEventListener('mouseenter', () => {
+                if (isDrawing) {
+                    const idx = dot.getAttribute('data-index');
+                    if (!pattern.includes(idx)) {
+                        pattern.push(idx);
+                        dot.classList.add('active');
+                    }
+                }
+            });
+            dot.addEventListener('mousedown', () => {
+                isDrawing = true;
+                pattern = [dot.getAttribute('data-index')];
+                dot.classList.add('active');
+            });
+        });
+
+        window.addEventListener('mouseup', async () => {
+            if (isDrawing) {
+                isDrawing = false;
+                const success = await auth.verifyPattern(pattern.join(''));
+                if (success) {
+                    window.location.href = 'index.html';
+                } else {
+                    alert('Invalid Pattern! Try sequence 1-2-3 (horizontally)');
+                    pattern = [];
+                    dots.forEach(d => d.classList.remove('active'));
+                    const card = document.querySelector('.login-card');
+                    card.classList.remove('animate-shake');
+                    void card.offsetWidth; // trigger reflow
+                    card.classList.add('animate-shake');
+                }
+            }
+        });
+
+        // Touch support
+        document.getElementById('patternCanvas').addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const elem = document.elementFromPoint(touch.clientX, touch.clientY);
+            if (elem && elem.classList.contains('pattern-dot')) {
+                isDrawing = true;
+                const idx = elem.getAttribute('data-index');
+                if (!pattern.includes(idx)) {
+                    pattern.push(idx);
+                    elem.classList.add('active');
+                }
+            }
+        });
+
+        lucide.createIcons();
+    </script>
+</body>
+
+</html>

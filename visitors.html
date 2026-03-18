@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Visitors - VisiCheck</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+
+<body>
+    <div class="app-layout">
+        <aside id="sidebar" class="sidebar"></aside>
+
+        <main class="main-content">
+            <header class="topbar">
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <button class="menu-toggle" onclick="app.toggleSidebar()">
+                        <i data-lucide="menu"></i>
+                    </button>
+                    <a href="index.html" class="hidden" id="backBtn" style="color: var(--text-muted);"><i
+                            data-lucide="arrow-left"></i></a>
+                    <h2 id="pageTitle">Apartment Visitor Hub</h2>
+                </div>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <select id="langSelect" onchange="visitors.translate(this.value)" class="mobile-hidden" style="background: var(--surface); color: white; border: 1px solid var(--border); border-radius: 8px; font-size: 0.75rem; padding: 0.25rem;">
+                        <option value="en">English (US)</option>
+                        <option value="es">Español</option>
+                        <option value="fr">Français</option>
+                    </select>
+                    <div id="capacityBadge" class="badge badge-success" style="font-size: 0.6rem; padding: 0.25rem 0.5rem;">CAPACITY: OK</div>
+                </div>
+                <div class="user-profile">
+                    <span id="userName">Admin</span>
+                    <button class="primary-btn" onclick="visitors.toggleView()" id="viewToggleBtn">
+                        <i data-lucide="plus"></i> New Check-In
+                    </button>
+                </div>
+            </header>
+
+            <div class="page-content animate-fade">
+                <!-- Active Visitors View -->
+                <div id="activeView">
+                    <div class="stats-grid" id="activeList">
+                        <!-- Cards Injected -->
+                    </div>
+                </div>
+
+                <!-- Registration View -->
+                <div id="regView" class="hidden">
+                    <!-- Pre-Reg QR Vault -->
+                    <div class="card" style="max-width: 800px; margin: 0 auto 1.5rem auto; border: 1px dashed var(--primary); background: rgba(99,102,241,0.05);">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <h4 style="font-size: 0.9rem; color: var(--primary);">Invited Guest?</h4>
+                                <p style="font-size: 0.7rem; color: var(--text-muted);">Scan your pre-registration QR to skip the form.</p>
+                            </div>
+                            <button class="primary-btn" style="background: var(--primary); font-size: 0.75rem; padding: 0.5rem 1rem;">
+                                <i data-lucide="scan-line"></i> Scan Invite QR
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="card" style="max-width: 800px; margin: 0 auto;">
+                        <div class="grid-2-col">
+                            <!-- Image Upload Section -->
+                            <div style="text-align: center;">
+                                <div id="uploadBox"
+                                    style="width: 100%; aspect-ratio: 4/3; background: var(--surface); border-radius: 20px; overflow: hidden; position: relative; border: 2px dashed var(--border); transition: all 0.3s ease; display: flex; align-items: center; justify-content: center; cursor: pointer;"
+                                    onclick="document.getElementById('imageUpload').click()">
+                                    
+                                    <input type="file" id="imageUpload" accept="image/*" class="hidden" onchange="visitors.handleImageUpload(event)">
+                                    
+                                    <img id="capturedImg" class="hidden"
+                                        style="width: 100%; height: 100%; object-fit: cover;">
+                                    
+                                    <div id="uploadPlaceholder"
+                                        style="display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-muted); padding: 2rem;">
+                                        <div style="background: var(--primary-light); padding: 1.5rem; border-radius: 50%; margin-bottom: 1.5rem;">
+                                            <i data-lucide="image-plus" style="width: 48px; height: 48px; color: var(--primary);"></i>
+                                        </div>
+                                        <h4 style="color: white; margin-bottom: 0.5rem;">Upload Visitor Photo</h4>
+                                        <p style="font-size: 0.8rem;">Tap to choose from gallery or capture</p>
+                                    </div>
+
+                                    <div id="scanOverlay" class="hidden">
+                                        <div class="face-scan-overlay"></div>
+                                        <div class="scan-line"></div>
+                                    </div>
+                                </div>
+                                <div style="margin-top: 1.5rem; display: flex; gap: 1rem; justify-content: center;">
+                                    <button type="button" onclick="document.getElementById('imageUpload').click()" class="primary-btn" style="background: var(--surface); border: 1px solid var(--border);">
+                                        <i data-lucide="upload"></i> Select Image
+                                    </button>
+                                </div>
+                                <div style="margin-top: 1rem; display: flex; flex-direction: column; align-items: center; gap: 1rem; font-size: 0.75rem; color: var(--text-muted);">
+                                    <button type="button" onclick="visitors.simulateQuickScan()" class="primary-btn" style="width: 100%; justify-content: center; background: var(--accent); border: none;">
+                                        <i data-lucide="zap"></i> AI Quick Scan (Blinkit/Regulars)
+                                    </button>
+                                    <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                        <input type="checkbox" id="faceShieldToggle" style="width: 14px; height: 14px;"> AI Privacy Shield
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Form Section -->
+                            <form id="regForm">
+                                <div
+                                    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; background: var(--primary-light); padding: 0.75rem 1.25rem; border-radius: 12px; border: 1px solid var(--primary);">
+                                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                        <i data-lucide="mic" style="color: var(--primary);"></i>
+                                        <span id="conciergeLabel"
+                                            style="font-size: 0.85rem; font-weight: 700; color: var(--primary);">Digital
+                                            Concierge Active</span>
+                                    </div>
+                                    <div style="display: flex; gap: 0.5rem;">
+                                        <button type="button" onclick="visitors.startVoice()" class="primary-btn"
+                                            style="padding: 0.4rem 0.8rem; font-size: 0.75rem;">Speak Now</button>
+                                        <button type="button" onclick="visitors.togglePackageMode()" id="packageBtn" class="primary-btn"
+                                            style="padding: 0.4rem 0.8rem; font-size: 0.75rem; background: var(--surface); border: 1px solid var(--border);">
+                                            <i data-lucide="package"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="grid-2-col">
+                                    <div class="input-group">
+                                        <label class="input-label">Visitor Full Name</label>
+                                        <input type="text" id="vName" class="input-field" placeholder="Full Name" required>
+                                    </div>
+                                    <div class="input-group">
+                                        <label class="input-label">Phone Number & OTP</label>
+                                        <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                            <input type="tel" id="vPhone" class="input-field" placeholder="+91 XXXX XXX XXX" required style="flex: 1;">
+                                            <button type="button" onclick="visitors.verifyOTP()" class="primary-btn" style="padding: 0.5rem 0.75rem; font-size: 0.65rem; background: var(--success);">Verify OTP</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="input-group">
+                                    <label class="input-label">ID Number / CNIC & AI Scan</label>
+                                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                        <input type="text" id="vId" class="input-field" placeholder="CNIC Format" required style="flex: 1;" oninput="visitors.checkIdentity(this.value)">
+                                        <button type="button" onclick="visitors.startOCR()" class="primary-btn" style="padding: 0.5rem 0.75rem; font-size: 0.65rem; background: var(--surface); border: 1px dashed var(--primary);">
+                                            <i data-lucide="scan-line" style="width: 14px;"></i> AI SCAN
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="grid-3-col">
+                                    <div class="input-group">
+                                        <label class="input-label">Vehicle Plate</label>
+                                        <input type="text" id="vPlate" class="input-field" placeholder="ABC-1234 (Optional)">
+                                    </div>
+                                    <div class="input-group">
+                                        <label class="input-label">Guests</label>
+                                        <input type="number" id="vGuests" class="input-field" value="1" min="1">
+                                    </div>
+                                    <div class="input-group">
+                                        <label class="input-label">Visit Type</label>
+                                        <select id="vType" class="input-field">
+                                            <option value="Short">Short (0-2h)</option>
+                                            <option value="Hourly">Hourly (2-6h)</option>
+                                            <option value="Overnight">Overnight</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="input-group" style="margin-top: 1.5rem;">
+                                    <label class="input-label">Flat / Unit Number (Target)</label>
+                                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                        <input type="text" id="vUnit" class="input-field" style="margin-bottom: 0;" placeholder="A-402, B-101 etc." required list="unitSuggestions">
+                                        <datalist id="unitSuggestions">
+                                            <option value="A-101">A-101 (Amit Sharma)</option>
+                                            <option value="A-402">A-402 (Priya Patel)</option>
+                                            <option value="B-205">B-205 (Rajesh Kumar)</option>
+                                            <option value="C-104">C-104 (Vikram Singh)</option>
+                                        </datalist>
+                                        <i data-lucide="home" style="color: var(--primary); width: 24px;"></i>
+                                    </div>
+                                </div>
+                                <div class="input-group">
+                                    <label class="input-label">Purpose of Visit</label>
+                                    <select id="vPurpose" class="input-field" required
+                                         onchange="visitors.handlePurposeChange()">
+                                        <option value="Guest">Social Visit / Guest</option>
+                                        <option value="Delivery">Delivery (Food/Package)</option>
+                                        <option value="Daily Help">Daily Help (Maid/Cook)</option>
+                                        <option value="Maintenance">Maintenance (Plumber/Electrician)</option>
+                                        <option value="Personal">Personal Visit</option>
+                                    </select>
+                                </div>
+
+                                <div class="input-group" id="hostBox" style="background: rgba(99,102,241,0.05); padding: 1rem; border-radius: 12px; border: 1px solid var(--border);">
+                                    <label class="input-label">Target Resident & Approval</label>
+                                    <div style="display: flex; gap: 0.5rem; align-items: center; justify-content: space-between;">
+                                        <div style="flex: 1;">
+                                            <input type="text" id="vHost" class="input-field" style="margin-bottom: 0.5rem;" placeholder="Search Resident Name">
+                                            <div id="approvalStatus" style="font-size: 0.65rem; color: var(--text-muted); font-weight: 700;">STATUS: <span style="color: var(--warning);">WAITING RESPONSE</span></div>
+                                        </div>
+                                        <button type="button" onclick="visitors.notifyResident()" class="primary-btn" style="padding: 0.75rem; background: var(--primary);">
+                                            <i data-lucide="bell"></i> NOTIFY
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="input-group hidden" id="companyBox">
+                                    <label class="input-label">Delivery Service</label>
+                                    <select id="vCompany" class="input-field">
+                                        <option value="Swiggy">Swiggy</option>
+                                        <option value="Zomato">Zomato</option>
+                                        <option value="Amazon">Amazon</option>
+                                        <option value="Flipkart">Flipkart</option>
+                                        <option value="Dunzo">Dunzo</option>
+                                        <option value="Courier">Courier / FedEx</option>
+                                        <option value="Other">Other Service</option>
+                                    </select>
+                                </div>
+
+                                <div class="input-group" id="signatureSection">
+                                    <label class="input-label">Digital Signature</label>
+                                    <div style="position: relative;">
+                                        <canvas id="sigPad" class="signature-pad"></canvas>
+                                        <button type="button" onclick="visitors.clearSig()"
+                                            style="position: absolute; right: 8px; bottom: 8px; font-size: 0.7rem; padding: 4px 8px; color: var(--text-muted); background: var(--background); border: 1px solid var(--border); border-radius: 4px; cursor: pointer;">Clear
+                                            Signature</button>
+                                    </div>
+                                </div>
+
+                                <div class="input-group">
+                                    <label class="input-label">Society Safety & Entry Terms</label>
+                                    <div class="nda-scroll-box">
+                                        <b>RESIDENTIAL SOCIETY ENTRY POLICY</b><br><br>
+                                        By entering this apartment complex, you agree to: 1. Maintain a speed limit of 10km/h. 2. Park only in designated visitor spots or outside the gate. 3. No smoking in common areas. 4. Cooperate with security for vehicle inspection if required. 5. Follow all COVID/Health protocols currently in effect. Parents are responsible for children.
+                                    </div>
+                                    <div style="display: flex; gap: 0.75rem; align-items: flex-start; background: var(--primary-light); padding: 1rem; border-radius: 12px;">
+                                        <input type="checkbox" id="vWaiver" required style="width: 20px; height: 20px; cursor: pointer; margin-top: 2px;">
+                                        <label for="vWaiver" style="font-size: 0.75rem; color: var(--text-muted); line-height: 1.4;">
+                                            I agree to follow the <b>Society Safety & Entry</b> rules.
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <button type="submit" class="primary-btn"
+                                    style="width: 100%; justify-content: center; margin-top: 1rem;">
+                                    Complete Check-In
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Pass Modal -->
+    <div id="passModal" class="modal-overlay">
+        <div class="holo-pass-container">
+            <div class="modal holo-pass-3d" style="width: 350px;">
+                <div style="text-align: center; margin-bottom: 2rem;">
+                    <div style="font-size: 0.65rem; color: var(--primary); font-weight: 800; letter-spacing: 2px;">SECURE GATE PASS</div>
+                    <div style="font-size: 1.5rem; font-weight: 900; color: white;">#VIS-<span id="passRid"></span></div>
+                </div>
+
+                <div id="passDetails" style="color: white; margin-bottom: 1.5rem;">
+                    <!-- Details will be injected -->
+                </div>
+
+                <div style="margin-bottom: 1.5rem;">
+                    <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.5rem; text-transform: uppercase; font-weight: 700;">3D Wayfinding</p>
+                    <div class="path-container" style="background: none;">
+                        <div class="path-map" style="background: rgba(255,255,255,0.05);">
+                            <div id="pathLine" class="path-line"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="text-align: center; background: white; padding: 1rem; border-radius: 12px; margin-bottom: 1.5rem;">
+                    <canvas id="qr" style="display: block; margin: 0 auto; width: 120px; height: 120px;"></canvas>
+                </div>
+
+                <div style="display: flex; gap: 1rem; margin-top: auto;">
+                    <button class="primary-btn" onclick="visitors.downloadPDF()" style="flex: 1; background: var(--primary);">
+                        <i data-lucide="printer"></i> PDF
+                    </button>
+                    <button class="primary-btn" onclick="app.hideModal('passModal')" style="flex: 1; background: rgba(255,255,255,0.1);">Done</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Security Alert Modal -->
+    <div id="securityModal" class="modal-overlay">
+        <div class="modal" style="border: 2px solid var(--danger);">
+            <div style="text-align: center; color: var(--danger);">
+                <i data-lucide="shield-alert" style="width: 64px; height: 64px; margin-bottom: 1rem;"></i>
+                <h2 style="color: var(--danger);">Security Alert!</h2>
+                <p style="margin-top: 1rem; font-weight: 600;" id="blReason"></p>
+                <p style="margin-top: 1rem; color: var(--text-muted);">This individual is on the system blacklist.
+                    Registration is blocked.</p>
+                <button class="primary-btn btn-danger" onclick="app.hideModal('securityModal')"
+                    style="width: 100%; margin-top: 2rem;">Acknowledge</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sentiment Modal -->
+    <div id="sentimentModal" class="modal-overlay">
+        <div class="modal" style="text-align: center;">
+            <h2 style="margin-bottom: 1.5rem;">How was your visit?</h2>
+            <div id="ratingBox" style="display: flex; justify-content: center; gap: 1.5rem; font-size: 3rem; margin-bottom: 1.5rem;">
+                <span onclick="visitors.submitSentiment('😊')" style="cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'">😊</span>
+                <span onclick="visitors.submitSentiment('😐')" style="cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'">😐</span>
+                <span onclick="visitors.submitSentiment('🙁')" style="cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'">🙁</span>
+            </div>
+            <div class="input-group" style="margin-bottom: 1.5rem;">
+                <input type="text" id="vNote" class="input-field" placeholder="Optional: Leave a thank you note..." style="text-align: center;">
+            </div>
+            <p style="color: var(--text-muted); font-size: 0.8rem;">Your feedback powers our hospitality metrics.</p>
+        </div>
+    </div>
+
+    <div id="conciergeDrawer" class="ai-concierge-drawer">
+        <div style="padding: 1.5rem; background: var(--primary); color: white; display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <i data-lucide="bot"></i>
+                <h3 style="color: white; font-size: 1rem;">Society AI Concierge</h3>
+            </div>
+            <button onclick="visitors.toggleChat()" style="background: none; border: none; color: white; cursor: pointer;">
+                <i data-lucide="x"></i>
+            </button>
+        </div>
+        <div style="padding: 1rem; background: var(--surface-light); border-bottom: 1px solid var(--border);">
+            <p style="font-size: 0.6rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.75rem; font-weight: 800; letter-spacing: 1px;">Quick Actions</p>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+                <button onclick="visitors.sendSystemChat('Block C direction')" class="primary-btn" style="font-size: 0.65rem; padding: 0.5rem; justify-content: center; background: rgba(99,102,241,0.05);">Find Block</button>
+                <button onclick="visitors.sendSystemChat('Contact Society Manager')" class="primary-btn" style="font-size: 0.65rem; padding: 0.5rem; justify-content: center; background: rgba(99,102,241,0.05);">Manager</button>
+                <button onclick="visitors.sendSystemChat('Parking Rules')" class="primary-btn" style="font-size: 0.65rem; padding: 0.5rem; justify-content: center; background: rgba(99,102,241,0.05);">Parking</button>
+                <button onclick="visitors.sendSystemChat('Gate SOS')" class="primary-btn" style="font-size: 0.65rem; padding: 0.5rem; justify-content: center; background: rgba(99,102,241,0.05);">Emergency</button>
+            </div>
+        </div>
+        <div id="chatBox" style="flex: 1; padding: 1.5rem; overflow-y: auto; display: flex; flex-direction: column; background: rgba(0,0,0,0.1);">
+            <div class="chat-bubble chat-bot">
+                Namaste! I am your Galaxy Residents Hub Assistant. How can I help you with visitor entry or society info today?
+            </div>
+        </div>
+        <div style="padding: 1.25rem; border-top: 1px solid var(--border); background: var(--surface);">
+            <div style="display: flex; gap: 0.5rem;">
+                <input type="text" id="chatInput" class="input-field" style="margin-bottom: 0;" placeholder="Ask AI anything..." onkeydown="if(event.key==='Enter') visitors.sendChatMessage()">
+                <button onclick="visitors.sendChatMessage()" class="primary-btn" style="padding: 0 1rem;"><i data-lucide="send"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Action Button (Mobile Only) -->
+    <button id="mobileFab" class="fab mobile-only" onclick="visitors.toggleView()">
+        <i data-lucide="plus"></i>
+    </button>
+
+    <!-- Floating AI Concierge Button -->
+    <button class="chat-trigger" onclick="visitors.toggleChat()" style="position: fixed; width: 60px; height: 60px; border-radius: 50%; background: var(--primary); color: white; border: none; box-shadow: 0 10px 20px rgba(99,102,241,0.4); cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 1000;">
+        <i data-lucide="message-square"></i>
+    </button>
+
+    <script src="js/db.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/visitors.js"></script>
+</body>
+
+</html>
